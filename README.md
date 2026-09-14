@@ -4,115 +4,53 @@ Persistent markdown wiki for coding agents. You curate sources; the agent ingest
 
 **Credit:** The idea is [Andrej Karpathy](https://karpathy.ai)’s — [LLM Wiki: a personal, compounding knowledge base](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This skill is an Agent Skills (`SKILL.md`) packaging of that pattern for Grok, Claude Code, and Gemini CLI.
 
-```
-llm-wiki/
-  SKILL.md                 # required — when to run, how to write
-  config.json              # you create this — wiki_root only
-  config.json.example
-  README.md
-  references/
-    index.md               # index.md format
-    log.md                 # log.md format
-```
+Not [nvk/llm-wiki](https://github.com/nvk/llm-wiki) (`wiki@llm-wiki`). Different project; plugin name here is `llm-wiki`.
 
-The wiki itself is **not** this folder. It lives at `wiki_root` in `config.json` — typically an [Obsidian](https://obsidian.md) vault. Plain markdown directories work too.
+The wiki itself is **not** this repo. It lives at `wiki_root` in a local `config.json` — typically an [Obsidian](https://obsidian.md) vault.
 
 ---
 
 ## Install
 
-Copy this **directory** (not only `SKILL.md`). The agent needs `references/` and will write `config.json` next to `SKILL.md`.
+After install, [set `wiki_root`](#configure). One command per agent — no copying folders.
 
-Assume the skill folder you are copying is `./llm-wiki` (clone, download, or this path).
-
-### Grok
-
-User-wide (all projects):
-
-```bash
-mkdir -p ~/.grok/skills/llm-wiki
-cp SKILL.md config.json.example README.md ~/.grok/skills/llm-wiki/
-cp -R references ~/.grok/skills/llm-wiki/
-cp ~/.grok/skills/llm-wiki/config.json.example ~/.grok/skills/llm-wiki/config.json
-```
-
-This repo only:
-
-```bash
-mkdir -p .grok/skills/llm-wiki
-cp SKILL.md config.json.example README.md .grok/skills/llm-wiki/
-cp -R references .grok/skills/llm-wiki/
-cp .grok/skills/llm-wiki/config.json.example .grok/skills/llm-wiki/config.json
-```
-
-Grok also scans `~/.claude/skills/` by default. If you already installed for Claude Code, you do not need a second copy unless you want Grok-only overrides.
-
-Then set `wiki_root` (see [Configure](#configure)). In a Grok session: `/skills` to confirm `llm-wiki`, or say “start a wiki”. Skills on disk reload without a restart.
-
-Windows: `%USERPROFILE%\.grok\skills\llm-wiki\`.
+Replace `mngaonkar/llm-wiki` with this repo if you forked it.
 
 ### Claude Code
 
-User-wide:
-
 ```bash
-mkdir -p ~/.claude/skills/llm-wiki
-cp SKILL.md config.json.example README.md ~/.claude/skills/llm-wiki/
-cp -R references ~/.claude/skills/llm-wiki/
-cp ~/.claude/skills/llm-wiki/config.json.example ~/.claude/skills/llm-wiki/config.json
+claude plugin marketplace add mngaonkar/llm-wiki
+claude plugin install llm-wiki@llm-wiki
 ```
 
-This repo only (commit with the project):
+This session only, no install:
 
 ```bash
-mkdir -p .claude/skills/llm-wiki
-cp SKILL.md config.json.example README.md .claude/skills/llm-wiki/
-cp -R references .claude/skills/llm-wiki/
-cp .claude/skills/llm-wiki/config.json.example .claude/skills/llm-wiki/config.json
+claude --plugin-dir /path/to/llm-wiki
 ```
 
-Set `wiki_root`, then start a session. Folder name `llm-wiki` is the skill name. Say “ingest this” or “query the wiki”; no slash command is required.
+**claude.ai / Cowork:** zip this repo folder (`SKILL.md` at the zip root of that folder), enable code execution, **Customize → Skills → +**.
 
-**claude.ai / Cowork:** zip the `llm-wiki` folder (`SKILL.md` at the zip root of that folder), enable code execution, then **Customize → Skills → +**.
+### Grok
 
-Windows: `%USERPROFILE%\.claude\skills\llm-wiki\`.
+```bash
+grok plugin marketplace add mngaonkar/llm-wiki
+grok plugin install llm-wiki --trust
+```
+
+Then `/skills` or say “start a wiki”.
 
 ### Gemini CLI
 
-User-wide:
-
 ```bash
-mkdir -p ~/.gemini/skills/llm-wiki
-cp SKILL.md config.json.example README.md ~/.gemini/skills/llm-wiki/
-cp -R references ~/.gemini/skills/llm-wiki/
-cp ~/.gemini/skills/llm-wiki/config.json.example ~/.gemini/skills/llm-wiki/config.json
+gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user
 ```
 
-This workspace only:
+Workspace only: add `--scope workspace`. Then `/skills reload` and `/skills list`.
 
-```bash
-mkdir -p .gemini/skills/llm-wiki
-cp SKILL.md config.json.example README.md .gemini/skills/llm-wiki/
-cp -R references .gemini/skills/llm-wiki/
-cp .gemini/skills/llm-wiki/config.json.example .gemini/skills/llm-wiki/config.json
-```
+### Manual (fallback)
 
-From a checkout of this skill:
-
-```bash
-gemini skills install /path/to/llm-wiki --scope user
-# or --scope workspace
-```
-
-If the files are already on disk:
-
-```
-/skills link /path/to/llm-wiki --scope user
-```
-
-Set `wiki_root`, then `/skills reload` and `/skills list` to confirm. Gemini also reads `~/.agents/skills/` and `.agents/skills/`.
-
-Windows: `%USERPROFILE%\.gemini\skills\llm-wiki\`.
+If you cannot use a plugin marketplace, copy the repo into the agent’s skills directory (`~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`). Do not install **both** as a user skill and as a plugin from the same path — the agent would load it twice.
 
 ---
 

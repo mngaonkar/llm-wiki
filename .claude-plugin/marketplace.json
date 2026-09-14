@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "llm-wiki",
+  "description": "Karpathy-pattern persistent markdown wiki for coding agents.",
+  "owner": {
+    "name": "Mahadev N Gaonkar",
+    "url": "https://github.com/mngaonkar"
+  },
+  "plugins": [
+    {
+      "name": "llm-wiki",
+      "source": "./",
+      "description": "Persistent markdown wiki (ingest → pages → query → lint). Obsidian-compatible.",
+      "version": "1.4.0",
+      "author": {
+        "name": "Mahadev N Gaonkar"
+      },
+      "category": "productivity",
+      "keywords": ["wiki", "obsidian", "knowledge-base", "karpathy"]
+    }
+  ]
+}

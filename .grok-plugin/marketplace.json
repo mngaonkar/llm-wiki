@@ -1,0 +1,25 @@
+{
+  "name": "llm-wiki",
+  "description": "Karpathy-pattern persistent markdown wiki for coding agents.",
+  "owner": {
+    "name": "Mahadev N Gaonkar",
+    "url": "https://github.com/mngaonkar"
+  },
+  "plugins": [
+    {
+      "name": "llm-wiki",
+      "description": "Persistent markdown wiki (ingest → pages → query → lint). Obsidian-compatible.",
+      "category": "productivity",
+      "version": "1.4.0",
+      "author": {
+        "name": "Mahadev N Gaonkar"
+      },
+      "homepage": "https://github.com/mngaonkar/llm-wiki",
+      "keywords": ["wiki", "obsidian", "knowledge-base", "karpathy"],
+      "source": {
+        "type": "local",
+        "path": "./"
+      }
+    }
+  ]
+}
