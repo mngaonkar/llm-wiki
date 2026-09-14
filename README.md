@@ -14,21 +14,32 @@ The wiki itself is **not** this repo. It lives in a folder you choose (`wiki_roo
 
 ## Install
 
-| Agent | Commands |
+Install from GitHub. Do **not** also keep a copy in `~/.claude/skills/llm-wiki` (or `~/.grok/skills/…`) — the plugin and the user-skill copy fight over the name `llm-wiki`. If you already copied the folder there, remove it after the plugin install.
+
+| Agent | Commands (verified) |
 |---|---|
 | **Claude Code** | `claude plugin marketplace add mngaonkar/llm-wiki` then `claude plugin install llm-wiki@llm-wiki` |
-| **Grok** | `grok plugin marketplace add mngaonkar/llm-wiki` then `grok plugin install llm-wiki --trust` |
+| **Grok** | `grok plugin install mngaonkar/llm-wiki --trust` then `grok plugin enable llm-wiki` |
 | **Gemini CLI** | `gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user` |
 
-Forked the repo? Replace `mngaonkar/llm-wiki` with your `owner/repo`.
+Grok installs the git repo as the plugin (`grok plugin install owner/repo`). Adding the repo as a marketplace and then `grok plugin install llm-wiki` is **not** enough.
+
+Forked? Replace `mngaonkar/llm-wiki` with your `owner/repo`.
 
 **Claude, this session only** (no install): `claude --plugin-dir /path/to/llm-wiki`
 
 **claude.ai / Cowork:** zip this folder so `SKILL.md` is at the zip root, enable code execution, **Customize → Skills → +**.
 
-**Manual fallback:** clone into `~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`. Do not also plugin-install the same path — the agent would load the skill twice.
+**Manual fallback** (only if you cannot use a plugin): clone into `~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`. Pick **either** plugin **or** user skill, not both.
 
-After Gemini install: `/skills reload` then `/skills list`.
+After Gemini: `/skills reload` then `/skills list`. After Grok/Claude: start a **new session** (or `/plugins` → reload) so the old skills-dir copy is gone.
+
+### Update
+
+```bash
+grok plugin update llm-wiki
+claude plugin marketplace update llm-wiki
+```
 
 ---
 
@@ -38,7 +49,7 @@ After Gemini install: `/skills reload` then `/skills list`.
 2. In a new session say: **Start a wiki for &lt;topic&gt;. Store it in &lt;absolute-path&gt;.**
 3. Then: **Ingest &lt;URL or file&gt;** or **What does the wiki say about X?**
 
-If you already have an Obsidian vault, skip INIT. Set `wiki_root` to that vault (see [Configure](#configure)) and say **lint the wiki**.
+If you already have an Obsidian vault, skip INIT. Copy `config.json.example` to `config.json` in the **installed plugin directory**, set `wiki_root`, then say **lint the wiki**.
 
 ---
 
@@ -54,13 +65,14 @@ The agent will **ask** if `config.json` is missing. To set it yourself, copy `co
 }
 ```
 
-Where that file lives:
+Where that file lives (plugin install — `grok plugin details llm-wiki` / `claude plugin details llm-wiki` print the directory):
 
 | How you installed | Put `config.json` here |
 |---|---|
-| User skill (manual copy) | `~/.claude/skills/llm-wiki/` (or `~/.grok/skills/…`, `~/.gemini/skills/…`) |
-| Claude / Grok plugin | Next to `SKILL.md` inside the installed plugin directory (`claude plugin details llm-wiki` / `grok plugin details llm-wiki` prints the path) |
+| Grok plugin | `~/.grok/installed-plugins/llm-wiki-<id>/config.json` (next to `SKILL.md`) |
+| Claude plugin | `~/.claude/plugins/cache/llm-wiki/llm-wiki/<version>/config.json` |
 | Gemini | The directory `gemini skills install` created (`/skills list` shows it) |
+| User skill (manual copy only) | `~/.claude/skills/llm-wiki/` (or `~/.grok/skills/…`, `~/.gemini/skills/…`) |
 
 Do not commit someone else’s `config.json`. This repo gitignores it.
 
