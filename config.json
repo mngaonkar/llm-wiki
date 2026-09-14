@@ -1,0 +1,6 @@
+{
+  "wiki_root": "/Users/mahadevgaonkar/Documents/Obsidian/",
+  "description": "Absolute path to the wiki root. ALL wiki reads/writes MUST stay inside this directory. The skill must never create or edit files outside wiki_root. Update this via the INIT operation or by editing this file directly.",
+  "updated": "2026-09-08"
+}
+
