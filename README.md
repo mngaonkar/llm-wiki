@@ -1,62 +1,52 @@
 # llm-wiki
 
-Persistent markdown wiki for coding agents. You curate sources; the agent ingests them into cross-linked pages, answers from the wiki, and keeps an append-only log.
+Persistent markdown wiki for coding agents. You point at sources; the agent ingests them into cross-linked pages, answers from the wiki, and keeps an append-only log.
 
-**Credit:** The idea is [Andrej Karpathy](https://karpathy.ai)’s — [LLM Wiki: a personal, compounding knowledge base](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This skill is an Agent Skills (`SKILL.md`) packaging of that pattern for Grok, Claude Code, and Gemini CLI.
+**Repo:** [github.com/mngaonkar/llm-wiki](https://github.com/mngaonkar/llm-wiki)
 
-Not [nvk/llm-wiki](https://github.com/nvk/llm-wiki) (`wiki@llm-wiki`). Different project; plugin name here is `llm-wiki`.
+**Credit:** The idea is [Andrej Karpathy](https://karpathy.ai)’s — [LLM Wiki: a personal, compounding knowledge base](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This is an [Agent Skills](https://agentskills.io) (`SKILL.md`) packaging of that pattern for **Claude Code**, **Grok**, and **Gemini CLI**.
 
-The wiki itself is **not** this repo. It lives at `wiki_root` in a local `config.json` — typically an [Obsidian](https://obsidian.md) vault.
+This is **not** [nvk/llm-wiki](https://github.com/nvk/llm-wiki) (`wiki@llm-wiki`). Different project. Plugin name here is `llm-wiki`.
+
+The wiki itself is **not** this repo. It lives in a folder you choose (`wiki_root`) — typically an [Obsidian](https://obsidian.md) vault.
 
 ---
 
 ## Install
 
-After install, [set `wiki_root`](#configure). One command per agent — no copying folders.
+| Agent | Commands |
+|---|---|
+| **Claude Code** | `claude plugin marketplace add mngaonkar/llm-wiki` then `claude plugin install llm-wiki@llm-wiki` |
+| **Grok** | `grok plugin marketplace add mngaonkar/llm-wiki` then `grok plugin install llm-wiki --trust` |
+| **Gemini CLI** | `gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user` |
 
-Replace `mngaonkar/llm-wiki` with this repo if you forked it.
+Forked the repo? Replace `mngaonkar/llm-wiki` with your `owner/repo`.
 
-### Claude Code
+**Claude, this session only** (no install): `claude --plugin-dir /path/to/llm-wiki`
 
-```bash
-claude plugin marketplace add mngaonkar/llm-wiki
-claude plugin install llm-wiki@llm-wiki
-```
+**claude.ai / Cowork:** zip this folder so `SKILL.md` is at the zip root, enable code execution, **Customize → Skills → +**.
 
-This session only, no install:
+**Manual fallback:** clone into `~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`. Do not also plugin-install the same path — the agent would load the skill twice.
 
-```bash
-claude --plugin-dir /path/to/llm-wiki
-```
+After Gemini install: `/skills reload` then `/skills list`.
 
-**claude.ai / Cowork:** zip this repo folder (`SKILL.md` at the zip root of that folder), enable code execution, **Customize → Skills → +**.
+---
 
-### Grok
+## Quick start
 
-```bash
-grok plugin marketplace add mngaonkar/llm-wiki
-grok plugin install llm-wiki --trust
-```
+1. Install (table above).
+2. In a new session say: **Start a wiki for &lt;topic&gt;. Store it in &lt;absolute-path&gt;.**
+3. Then: **Ingest &lt;URL or file&gt;** or **What does the wiki say about X?**
 
-Then `/skills` or say “start a wiki”.
-
-### Gemini CLI
-
-```bash
-gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user
-```
-
-Workspace only: add `--scope workspace`. Then `/skills reload` and `/skills list`.
-
-### Manual (fallback)
-
-If you cannot use a plugin marketplace, copy the repo into the agent’s skills directory (`~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`). Do not install **both** as a user skill and as a plugin from the same path — the agent would load it twice.
+If you already have an Obsidian vault, skip INIT. Set `wiki_root` to that vault (see [Configure](#configure)) and say **lint the wiki**.
 
 ---
 
 ## Configure
 
-Edit `config.json` in the **installed** skill directory (same folder as `SKILL.md`):
+`wiki_root` is an **absolute** path to the markdown folder (vault root, or a `wiki/` subfolder). On Windows use forward slashes (`C:/Users/you/wiki`).
+
+The agent will **ask** if `config.json` is missing. To set it yourself, copy `config.json.example` to `config.json` **next to the installed `SKILL.md`**:
 
 ```json
 {
@@ -64,14 +54,17 @@ Edit `config.json` in the **installed** skill directory (same folder as `SKILL.m
 }
 ```
 
-- Must be an **absolute** path. On Windows use forward slashes (`C:/Users/you/wiki`).
-- For Obsidian, this is the **vault root** (the folder that contains `.obsidian/`), or a subfolder of that vault if you want the wiki isolated from daily notes.
-- The agent will not guess this. Missing `wiki_root` → it asks, or you run INIT (“start a wiki”).
-- Do not copy another person’s `config.json`; it points at their vault.
+Where that file lives:
 
-Empty directory: **“Start a wiki for &lt;topic&gt;. Store it in &lt;path&gt;.”** That writes `schema.md`, `index.md`, and `log.md` under `wiki_root`.
+| How you installed | Put `config.json` here |
+|---|---|
+| User skill (manual copy) | `~/.claude/skills/llm-wiki/` (or `~/.grok/skills/…`, `~/.gemini/skills/…`) |
+| Claude / Grok plugin | Next to `SKILL.md` inside the installed plugin directory (`claude plugin details llm-wiki` / `grok plugin details llm-wiki` prints the path) |
+| Gemini | The directory `gemini skills install` created (`/skills list` shows it) |
 
-Existing Obsidian vault: set `wiki_root` to the vault, then **“lint the wiki”** or ingest a source. Do **not** run INIT — it would overlay a new empty catalog. The skill follows filenames already in the vault (Title Case with spaces vs `kebab-case`).
+Do not commit someone else’s `config.json`. This repo gitignores it.
+
+Empty folder → INIT as in Quick start. Existing vault → do **not** INIT; lint or ingest. The skill matches filenames already in the vault (Title Case with spaces vs `kebab-case`).
 
 ---
 
@@ -85,59 +78,55 @@ Existing Obsidian vault: set `wiki_root` to the vault, then **“lint the wiki�
 | Lint the wiki / wiki status | LINT / STATUS |
 | Update the plan to cover X | UPDATE an existing plan page |
 
-The agent must only write wiki pages **inside** `wiki_root`. Every write is logged in `wiki_root/log.md`.
+The agent only writes wiki pages **inside** `wiki_root`. Every write is logged in `wiki_root/log.md`.
 
 ---
 
 ## Obsidian
 
-The agent writes ordinary `.md` files. Obsidian is the browser: graph, backlinks, search, and Properties. Keep the **skill** (`SKILL.md` + `config.json`) in the agent skills directory; keep the **wiki** in the vault. Do not copy this skill folder into the vault as if it were notes.
+The agent writes ordinary `.md` files. Obsidian is the browser: graph, backlinks, search, and Properties. Keep this **skill** in the agent/plugin directory; keep the **wiki** in the vault. Do not copy this repo into the vault as notes.
 
-### Point the skill at the vault
+1. Vault folder on disk → that path is `wiki_root`.
+2. Set `config.json` as above.
+3. Open the folder as a vault. Agent writes show up immediately (filesystem watch). No Obsidian plugin required.
 
-1. In Obsidian: vault folder → that path is `wiki_root`.
-2. Edit the installed skill’s `config.json`:
-
-```json
-{
-  "wiki_root": "/Users/you/Documents/Obsidian"
-}
-```
-
-3. Open that folder as a vault (or it already is). Agent writes show up immediately; Obsidian watches the filesystem. No plugin required.
-
-Use a **subfolder** (`…/Obsidian/wiki`) if you do not want `index.md` / `log.md` mixed with daily notes. Then `wiki_root` is that subfolder, and only those files are in scope.
-
-### What the vault contains
+Use a **subfolder** (`…/Obsidian/wiki`) if you do not want `index.md` / `log.md` mixed with daily notes.
 
 | File | Role in Obsidian |
 |---|---|
 | `index.md` | Map of content. Pin it or add it to a home note. |
 | `log.md` | Append-only ingest history. Noisy on the graph; leave it, or exclude it from graph view. |
-| `schema.md` | Naming and entity types for this vault. Optional if the vault predates INIT. |
-| Topic pages | One note per person / project / concept. YAML frontmatter (`type`, `aliases`) shows up as Properties. |
+| `schema.md` | Naming and entity types. Optional if the vault predates INIT. |
+| Topic pages | One note per person / project / concept. YAML (`type`, `aliases`) shows as Properties. |
 
-Pages link with `[[WikiLinks]]`. Obsidian resolves by **filename stem**, case-insensitive. **Space ≠ hyphen:** `[[GLM 5.2]]` does not find `glm-5.2.md` unless that file has `aliases: ["GLM 5.2"]`. The skill sets `aliases` to the title used in `index.md` so graph and click-through work.
+Pages use `[[WikiLinks]]`. Obsidian resolves by **filename stem**, case-insensitive. **Space ≠ hyphen:** `[[GLM 5.2]]` does not find `glm-5.2.md` unless that file has `aliases: ["GLM 5.2"]`. The skill sets `aliases` to the title used in `index.md`.
 
-Sources **outside** the vault (a LinkedIn PDF, a download) are cited as `file:///` links, not wikilinks — Obsidian wikilinks only resolve inside the vault. URLs stay as markdown links.
+Sources **outside** the vault are `file:///` links, not wikilinks. URLs stay markdown links.
 
-### Existing vault
+Lint indexes every `.md` under `wiki_root` except `index.md` / `log.md` / `schema.md`. If the whole vault is `wiki_root`, daily notes land under Miscellaneous unless you point `wiki_root` at a wiki subfolder.
 
-- Match whatever naming you already use. Do not rename notes to kebab-case to satisfy the INIT template.
-- Human notes (daily notes, templates, scratch) stay. Lint indexes every `.md` under `wiki_root` except `index.md` / `log.md` / `schema.md`. If the whole vault is `wiki_root`, daily notes will appear in `index.md` under Miscellaneous unless you set `wiki_root` to a wiki subfolder.
-- Say **“lint the wiki”** after the first connect to catalog what is already there.
+Sync (Obsidian Sync, iCloud, Git, Syncthing) is fine — the wiki is just files. Avoid two agents writing the same vault at once. The agent must not edit `.obsidian/`.
 
-### Sync
+---
 
-Any Obsidian sync (official Sync, iCloud, Git, Syncthing) is fine: the wiki is just files. Avoid two agents writing the same vault at once. Do not let the agent edit `.obsidian/` — that directory is outside the skill’s job, even if it sits next to `wiki_root`.
+## In this repo
+
+```
+SKILL.md                      # when to run, how to write the wiki
+config.json.example           # copy to config.json next to SKILL.md
+references/                   # index.md and log.md formats
+.claude-plugin/               # Claude Code plugin + marketplace
+.grok-plugin/                 # Grok marketplace
+LICENSE                       # MIT
+```
 
 ---
 
 ## Requirements
 
-- An agent that loads `SKILL.md` folders (Grok, Claude Code, Gemini CLI).
-- Ability to read/write local files at `wiki_root`.
-- Optional: [Obsidian](https://obsidian.md) to browse the vault (graph, backlinks, Properties). Not required for ingest or query.
+- Claude Code, Grok, or Gemini CLI (anything that loads `SKILL.md` folders).
+- Local file read/write at `wiki_root`.
+- Optional: [Obsidian](https://obsidian.md) to browse the vault. Not required for ingest or query.
 
 ---
 
@@ -147,4 +136,6 @@ Any Obsidian sync (official Sync, iCloud, Git, Syncthing) is fine: the wiki is j
 
 - Gist: [https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 
-This repository is an implementation of that idea as a coding-agent skill. It is not affiliated with Karpathy.
+This repository implements that idea as a coding-agent skill. It is not affiliated with Karpathy.
+
+MIT license. See [LICENSE](LICENSE).
