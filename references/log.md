@@ -6,7 +6,7 @@
 
 - **Append-only.** New entries go at the **TOP** (most recent first), immediately after the `# Wiki Log` heading. Never edit or delete existing entries.
 - **Every write to the wiki MUST be logged. No exceptions.** A wiki change without a log entry is an execution bug.
-- **Log in the same tool-call batch as the change** — never after the fact, never skipped.
+- **Log in the same turn as the change**, before the user-facing report. If writes span multiple tool batches, put the log entry in the last write batch of that operation. Never skip. Never write the log after the report.
 - **Timestamp is mandatory — date AND time (HH:MM, 24-hour).** Never write a date-only header. Get the real current time by running `date "+%Y-%m-%d %H:%M"` before writing; capture it once at the start of the operation and reuse it for that entry. Do not guess or reuse a stale timestamp.
 
 ## Entry format
@@ -27,7 +27,7 @@ Omit the `Pages created/updated/deleted` lines that don't apply.
 |----------|-------------|
 | `init` | Wiki initialized for the first time |
 | `ingest` | Source ingested; pages created or updated from external content |
-| `update` | Page edited, index updated, schema changed, lint fixes applied |
+| `update` | Page edited, index updated, schema changed, lint fixes applied, query result saved |
 | `delete` | Pages or files removed (requires user confirmation) |
 
 **Brief description** — quoted, max ~8 words, names the source or action (e.g., `"Cohere one-pagers"`, `"task list from meeting notes"`, `"lint fix: dead links"`).
