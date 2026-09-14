@@ -1,61 +1,112 @@
-# llm-wiki
+# A Wiki Your Coding Agent Writes (Not RAG Over a Folder)
 
-Persistent markdown wiki for coding agents. You point at sources; the agent ingests them into cross-linked pages, answers from the wiki, and keeps an append-only log.
+*Drop in a source. The agent files it into cross-linked markdown pages, answers from those pages, and keeps an append-only log. Next time you ask, it does not rediscover the same facts from scratch.*
 
-**Repo:** [github.com/mngaonkar/llm-wiki](https://github.com/mngaonkar/llm-wiki)
+Most people’s experience with LLMs and documents is RAG: upload a pile of files, retrieve chunks at query time, generate an answer. That works. It also throws the synthesis away. Ask a question that needs five documents, and the model hunts and stitches fragments again. Nothing accumulates.
 
-**Credit:** The idea is [Andrej Karpathy](https://karpathy.ai)’s — [LLM Wiki: a personal, compounding knowledge base](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). This is an [Agent Skills](https://agentskills.io) (`SKILL.md`) packaging of that pattern for **Claude Code**, **Grok**, and **Gemini CLI**.
+**llm-wiki** is an [Agent Skill](https://agentskills.io) that does the other thing. The agent incrementally **builds and maintains a persistent wiki** — ordinary markdown, usually in an [Obsidian](https://obsidian.md) vault. You curate sources and ask questions. The agent does the bookkeeping: entity pages, cross-references, contradiction notes, the index, the log.
 
-This is **not** [nvk/llm-wiki](https://github.com/nvk/llm-wiki) (`wiki@llm-wiki`). Different project. Plugin name here is `llm-wiki`.
+**Repo:** [https://github.com/mngaonkar/llm-wiki](https://github.com/mngaonkar/llm-wiki)
 
-The wiki itself is **not** this repo. It lives in a folder you choose (`wiki_root`) — typically an [Obsidian](https://obsidian.md) vault.
+The idea is [Andrej Karpathy](https://karpathy.ai)’s — [LLM Wiki: a personal, compounding knowledge base](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f). His gist is an idea file you paste into an agent and instantiate. This repo is that pattern packaged as `SKILL.md` for **Claude Code**, **Grok**, and **Gemini CLI**. It is not affiliated with Karpathy.
 
----
+It is also **not** [nvk/llm-wiki](https://github.com/nvk/llm-wiki) (`wiki@llm-wiki`). Different project. Plugin name here is `llm-wiki`.
 
-## Install
+The wiki itself is **not** this repo. It lives in a folder you choose (`wiki_root`).
 
-Install from GitHub. Do **not** also keep a copy in `~/.claude/skills/llm-wiki` (or `~/.grok/skills/…`) — the plugin and the user-skill copy fight over the name `llm-wiki`. If you already copied the folder there, remove it after the plugin install.
+## The idea in one picture
 
-| Agent | Commands (verified) |
-|---|---|
-| **Claude Code** | `claude plugin marketplace add mngaonkar/llm-wiki` then `claude plugin install llm-wiki@llm-wiki` |
-| **Grok** | `grok plugin install mngaonkar/llm-wiki --trust` then `grok plugin enable llm-wiki` |
-| **Gemini CLI** | `gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user` |
+```
+You (sources, questions)
+        │
+        ▼
+   coding agent  ──reads──►  SKILL.md + config.json
+        │
+        │  writes only inside wiki_root
+        ▼
+   markdown wiki                 you browse
+   ┌─────────────────┐           ┌──────────┐
+   │ index.md        │◄─────────►│ Obsidian │
+   │ log.md          │           │ graph,   │
+   │ schema.md       │           │ backlinks│
+   │ Person.md       │           └──────────┘
+   │ Project.md      │
+   └─────────────────┘
+        ▲
+        │
+   ingest / query / lint
+```
 
-Grok installs the git repo as the plugin (`grok plugin install owner/repo`). Adding the repo as a marketplace and then `grok plugin install llm-wiki` is **not** enough.
+Three layers, same as the gist:
 
-Forked? Replace `mngaonkar/llm-wiki` with your `owner/repo`.
+**Raw sources** are immutable. LinkedIn PDF, GitHub API, a Medium RSS feed, a paper, a URL. The agent reads them. It never edits them.
 
-**Claude, this session only** (no install): `claude --plugin-dir /path/to/llm-wiki`
+**The wiki** is the compiled layer. One page per person, project, concept. `[[WikiLinks]]` between them. YAML frontmatter so Obsidian shows Properties. A source that contradicts an existing fact is **flagged**, not silently overwritten.
+
+**The skill** is the schema and the workflow. `SKILL.md` tells the agent when to INIT, INGEST, QUERY, LINT, and STATUS, and that every write stays inside `wiki_root` and is logged the same turn.
+
+The split is the whole design. RAG is an interpreter — re-derive on every question. A wiki is a compiler — integrate once, keep current, query the compiled pages.
+
+## What it looks like
+
+I pointed it at my Obsidian vault, ingested a LinkedIn export, a GitHub profile, and a Medium feed, then said **tell me about myself**.
+
+The agent did not scrape the open web for a biography. It read `index.md`, opened the person page and the catalog pages, and answered from those files — role, career path, certs, public repos, writing, and the gaps the wiki does not cover. A GitHub catalog of 74 repos became **one** catalog page plus a handful of flagship project pages, not 74 notes. A Medium feed became one catalog plus the posts that already had identity in the wiki.
+
+That is the point. Chat history evaporates. The wiki is still there in the next session.
+
+A typical first hour:
+
+1. **Start a wiki for my notes. Store it in /absolute/path/to/vault.**
+2. **Ingest https://github.com/you** (or a PDF, a URL, pasted text, LinkedIn, a blog).
+3. **What does the wiki say about X?**
+4. **Lint the wiki.**
+
+One ingest can touch a dozen pages: new entity pages, updates to related pages, `index.md`, and a log entry at the top of `log.md`.
+
+## Installing it
+
+Install from GitHub. Do **not** also keep a copy in `~/.claude/skills/llm-wiki` (or `~/.grok/skills/…`). The plugin and a user-skill folder fight over the name `llm-wiki`. If you already copied the folder there, remove it after the plugin install.
+
+**Claude Code**
+
+```bash
+claude plugin marketplace add mngaonkar/llm-wiki
+claude plugin install llm-wiki@llm-wiki
+```
+
+This session only, no install: `claude --plugin-dir /path/to/llm-wiki`.
 
 **claude.ai / Cowork:** zip this folder so `SKILL.md` is at the zip root, enable code execution, **Customize → Skills → +**.
 
-**Manual fallback** (only if you cannot use a plugin): clone into `~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`. Pick **either** plugin **or** user skill, not both.
-
-After Gemini: `/skills reload` then `/skills list`. After Grok/Claude: start a **new session** (or `/plugins` → reload) so the old skills-dir copy is gone.
-
-### Update
+**Grok**
 
 ```bash
-grok plugin update llm-wiki
-claude plugin marketplace update llm-wiki
+grok plugin install mngaonkar/llm-wiki --trust
+grok plugin enable llm-wiki
 ```
 
----
+Grok installs the git repo as the plugin (`grok plugin install owner/repo`). Adding the repo as a marketplace and then `grok plugin install llm-wiki` is **not** enough.
 
-## Quick start
+**Gemini CLI**
 
-1. Install (table above).
-2. In a new session say: **Start a wiki for &lt;topic&gt;. Store it in &lt;absolute-path&gt;.**
-3. Then: **Ingest &lt;URL or file&gt;** or **What does the wiki say about X?**
+```bash
+gemini skills install https://github.com/mngaonkar/llm-wiki.git --scope user
+```
 
-If you already have an Obsidian vault, skip INIT. Copy `config.json.example` to `config.json` in the **installed plugin directory**, set `wiki_root`, then say **lint the wiki**.
+Then `/skills reload` and `/skills list`.
 
----
+After Grok or Claude, start a **new session** (or `/plugins` → reload) so a leftover skills-dir copy is gone.
 
-## Configure
+Forked? Replace `mngaonkar/llm-wiki` with your `owner/repo`.
 
-`wiki_root` is an **absolute** path to the markdown folder (vault root, or a `wiki/` subfolder). On Windows use forward slashes (`C:/Users/you/wiki`).
+**Manual fallback** (only if you cannot use a plugin): clone into `~/.claude/skills/llm-wiki`, `~/.grok/skills/llm-wiki`, or `~/.gemini/skills/llm-wiki`. Pick **either** plugin **or** user skill, not both.
+
+Update later with `grok plugin update llm-wiki` or `claude plugin marketplace update llm-wiki`.
+
+## Point it at a wiki
+
+`wiki_root` is an **absolute** path to the markdown folder — the vault root, or a `wiki/` subfolder if you do not want `index.md` mixed with daily notes. On Windows use forward slashes (`C:/Users/you/wiki`).
 
 The agent will **ask** if `config.json` is missing. To set it yourself, copy `config.json.example` to `config.json` **next to the installed `SKILL.md`**:
 
@@ -65,7 +116,7 @@ The agent will **ask** if `config.json` is missing. To set it yourself, copy `co
 }
 ```
 
-Where that file lives (plugin install — `grok plugin details llm-wiki` / `claude plugin details llm-wiki` print the directory):
+Where that file lives (`grok plugin details llm-wiki` / `claude plugin details llm-wiki` print the directory):
 
 | How you installed | Put `config.json` here |
 |---|---|
@@ -76,37 +127,35 @@ Where that file lives (plugin install — `grok plugin details llm-wiki` / `clau
 
 Do not commit someone else’s `config.json`. This repo gitignores it.
 
-Empty folder → INIT as in Quick start. Existing vault → do **not** INIT; lint or ingest. The skill matches filenames already in the vault (Title Case with spaces vs `kebab-case`).
+Empty folder → say **Start a wiki for …** as above. **Existing vault → do not INIT.** Copy `config.json`, set `wiki_root`, say **lint the wiki**. The skill matches filenames already in the vault (Title Case with spaces vs `kebab-case`).
 
----
+The hard rule the skill enforces: **every file the agent creates or edits lives inside `wiki_root`.** Sources may live anywhere. Destinations may not.
 
-## Use
+## Talking to it
 
 | You say | What happens |
 |---|---|
 | Start a wiki / create a wiki | INIT |
-| Ingest this / ingest my GitHub / blog / LinkedIn | INGEST (catalog sources get one index page, not a page per repo) |
-| What does the wiki say about X / tell me about myself | QUERY |
+| Ingest this / ingest my GitHub / blog / LinkedIn | INGEST (a catalog source gets one index page, not a page per repo) |
+| What does the wiki say about X / tell me about myself | QUERY (wiki-first; gaps called out) |
 | Lint the wiki / wiki status | LINT / STATUS |
-| Update the plan to cover X | UPDATE an existing plan page |
+| Update the plan to cover X | UPDATE an existing plan page; do not re-ingest |
 
-The agent only writes wiki pages **inside** `wiki_root`. Every write is logged in `wiki_root/log.md`.
+Every write is logged in `wiki_root/log.md` the same turn, with a real timestamp. Read-only queries are not logged.
 
----
+Catalog ingest is the rule that keeps a GitHub or Medium account from exploding the vault: one catalog page for the account; extra pages only for things that already have wiki identity, or that are clearly flagship.
 
-## Obsidian
+## Obsidian is the browser
 
-The agent writes ordinary `.md` files. Obsidian is the browser: graph, backlinks, search, and Properties. Keep this **skill** in the agent/plugin directory; keep the **wiki** in the vault. Do not copy this repo into the vault as notes.
+The agent writes ordinary `.md` files. Obsidian is how you look at them: graph, backlinks, search, Properties. Keep this **skill** in the agent/plugin directory. Keep the **wiki** in the vault. Do not copy this repo into the vault as notes.
 
 1. Vault folder on disk → that path is `wiki_root`.
 2. Set `config.json` as above.
 3. Open the folder as a vault. Agent writes show up immediately (filesystem watch). No Obsidian plugin required.
 
-Use a **subfolder** (`…/Obsidian/wiki`) if you do not want `index.md` / `log.md` mixed with daily notes.
-
-| File | Role in Obsidian |
+| File | Role |
 |---|---|
-| `index.md` | Map of content. Pin it or add it to a home note. |
+| `index.md` | Map of content. Pin it. |
 | `log.md` | Append-only ingest history. Noisy on the graph; leave it, or exclude it from graph view. |
 | `schema.md` | Naming and entity types. Optional if the vault predates INIT. |
 | Topic pages | One note per person / project / concept. YAML (`type`, `aliases`) shows as Properties. |
@@ -119,7 +168,19 @@ Lint indexes every `.md` under `wiki_root` except `index.md` / `log.md` / `schem
 
 Sync (Obsidian Sync, iCloud, Git, Syncthing) is fine — the wiki is just files. Avoid two agents writing the same vault at once. The agent must not edit `.obsidian/`.
 
----
+Karpathy’s line still holds: Obsidian is the IDE; the LLM is the programmer; the wiki is the codebase.
+
+## What this is not
+
+It is not a vector database, an embedding pipeline, or NotebookLM. There is no search engine in this repo. At moderate scale the agent reads `index.md` and greps the pages.
+
+It is not a hosted wiki product. There is no server, no account, no sync of your notes through this skill. Files stay on your disk.
+
+It is not a replacement for your sources. The LinkedIn PDF and the GitHub API remain the source of truth; the wiki is the compiled view, and it can be wrong. That is why contradictions are flagged instead of overwritten, and why query answers list **gaps**.
+
+It is not Karpathy’s gist, and it is not [nvk/llm-wiki](https://github.com/nvk/llm-wiki). This is one skill packaging of the gist for coding-agent CLIs.
+
+What it *is*: ingest → pages → query → lint, as a `SKILL.md` the agent actually follows, with path safety and an append-only log so you can see what it did.
 
 ## In this repo
 
@@ -132,22 +193,21 @@ references/                   # index.md and log.md formats
 LICENSE                       # MIT
 ```
 
----
+You need Claude Code, Grok, or Gemini CLI (anything that loads `SKILL.md` folders) and local file read/write at `wiki_root`. Obsidian is optional for ingest and query; it is the best way to browse.
 
-## Requirements
+## Links
 
-- Claude Code, Grok, or Gemini CLI (anything that loads `SKILL.md` folders).
-- Local file read/write at `wiki_root`.
-- Optional: [Obsidian](https://obsidian.md) to browse the vault. Not required for ingest or query.
-
----
-
-## Credit
-
-**Andrej Karpathy** originated this approach: the LLM maintains a persistent wiki of markdown pages (ingest → pages → query → lint), rather than one-shot RAG over a pile of files.
-
-- Gist: [https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
-
-This repository implements that idea as a coding-agent skill. It is not affiliated with Karpathy.
+- **GitHub:** [mngaonkar/llm-wiki](https://github.com/mngaonkar/llm-wiki)
+- **Karpathy’s gist:** [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
+- **Agent Skills:** [agentskills.io](https://agentskills.io)
+- **Obsidian:** [obsidian.md](https://obsidian.md)
 
 MIT license. See [LICENSE](LICENSE).
+
+## Closing
+
+Humans abandon wikis because the maintenance grows faster than the value — updating cross-references, keeping summaries current, noticing when a new source contradicts an old claim. The agent does not get bored, and it can touch fifteen files in one pass.
+
+Your job is sources and questions. The agent’s job is the rest.
+
+Install the skill, point `wiki_root` at a folder (or an existing vault), ingest one source, and ask what the wiki says about it. Then open Obsidian and follow the links.
